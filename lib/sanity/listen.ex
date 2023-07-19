@@ -1,6 +1,6 @@
-defmodule SanityListen do
+defmodule Sanity.Listen do
   @moduledoc """
-  Documentation for `SanityListen`.
+  Documentation for `Sanity.Listen`.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule SanityListen do
 
   ## Examples
 
-      iex> SanityListen.hello()
+      iex> Sanity.Listen.hello()
       :world
 
   """

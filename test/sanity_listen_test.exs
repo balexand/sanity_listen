@@ -1,8 +1,8 @@
 defmodule SanityListenTest do
   use ExUnit.Case
-  doctest SanityListen
+  doctest Sanity.Listen
 
   test "greets the world" do
-    assert SanityListen.hello() == :world
+    assert Sanity.Listen.hello() == :world
   end
 end

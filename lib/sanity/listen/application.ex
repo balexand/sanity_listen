@@ -1,4 +1,4 @@
-defmodule SanityListen.Application do
+defmodule Sanity.Listen.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -8,13 +8,13 @@ defmodule SanityListen.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: SanityListen.Worker.start_link(arg)
-      # {SanityListen.Worker, arg}
+      # Starts a worker by calling: Sanity.Listen.Worker.start_link(arg)
+      # {Sanity.Listen.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: SanityListen.Supervisor]
+    opts = [strategy: :one_for_one, name: Sanity.Listen.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end
