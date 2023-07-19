@@ -1,4 +1,4 @@
-defmodule SanityListenTest do
+defmodule Sanity.ListenTest do
   use ExUnit.Case
   doctest Sanity.Listen
 
