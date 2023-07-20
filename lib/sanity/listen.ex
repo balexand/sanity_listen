@@ -2,6 +2,12 @@ defmodule Sanity.Listen do
   @moduledoc """
   For listening to changes using the [Sanity CMS listening API
   endpoint](https://www.sanity.io/docs/listening).
+
+  The streams returned by `listen!/2` and `listen_for_doc_changes!/2` must be iterated upon in the
+  same process that called the function. When this process exits then the underlying HTTPS
+  connection will be closed. The HTTPS connection will also be closed if the stream is halted. For
+  example, if `Enum.take/2` is called with the stream then the HTTPS connection will be closed after
+  the specified number of events have been received.
   """
 
   defmodule Event do
@@ -47,11 +53,6 @@ defmodule Sanity.Listen do
 
   @doc """
   Returns an endless `Stream` of `Sanity.Listen.Event` items.
-
-  This stream must be iterated upon in the same process that called this function. When this process
-  exits then the underlying HTTPS connection will be closed. The HTTPS connection will also be
-  closed if the stream is halted. For example, if `Enum.take/2` is called with the stream then the
-  HTTPS connection will be closed after the specified number of events have been received.
   """
   def listen!(query, opts) do
     opts = NimbleOptions.validate!(opts, @listen_opts_schema)
@@ -122,17 +123,29 @@ defmodule Sanity.Listen do
     }
   end
 
+  @doc """
+  Returns an endless `Stream` that emits the latest version of the document with the specified ID.
+  If a draft version of the document exists then the draft will be emitted. Otherwise, the published
+  version of the document will be emitted. If neither the draft not the published document exist
+  then `nil` will be emitted.
+
+  When the "Publish" or "Unpublish" actions are being performed in Sanity Studio then it is normal
+  to temporarily have an outdated document or `nil` emitted. For example, consider the case where
+  you have a unpublished draft and the click the "Publish" button. Sanity Studio will delete the
+  draft document and create the published document. The order of these mutations is inconsistent and
+  if draft is deleted before the published document is created then `nil` will be emitted briefly.
+  """
   def listen_for_doc_changes!(doc_id, opts) do
     opts = NimbleOptions.validate!(opts, @request_opts_schema)
     draft_id = "drafts.#{doc_id}"
 
-    results =
+    initial_results =
       Sanity.query("*[_id in $ids]", ids: [doc_id, draft_id])
       |> Sanity.request!(opts)
       |> Sanity.result!()
 
-    doc = Enum.find(results, &(&1["_id"] == doc_id))
-    draft = Enum.find(results, &(&1["_id"] == draft_id))
+    initial_doc = Enum.find(initial_results, &(&1["_id"] == doc_id))
+    initial_draft = Enum.find(initial_results, &(&1["_id"] == draft_id))
 
     update_stream =
       listen!(
@@ -142,7 +155,7 @@ defmodule Sanity.Listen do
           variables: %{ids: [doc_id, draft_id]}
         )
       )
-      |> Stream.transform(%{doc: doc, draft: draft}, fn
+      |> Stream.transform(%{doc: initial_doc, draft: initial_draft}, fn
         %Event{event: "welcome"}, acc ->
           {[], acc}
 
@@ -177,6 +190,6 @@ defmodule Sanity.Listen do
           {if(next == last, do: [], else: [next]), acc}
       end)
 
-    Stream.concat([draft || doc], update_stream)
+    Stream.concat([initial_draft || initial_doc], update_stream)
   end
 end
