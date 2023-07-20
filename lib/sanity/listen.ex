@@ -7,7 +7,7 @@ defmodule Sanity.Listen do
     defstruct data: nil, event: nil, id: nil
   end
 
-  @opts_schema [
+  @request_opts_schema [
     api_version: [
       type: :string,
       default: "v2021-10-21"
@@ -22,25 +22,28 @@ defmodule Sanity.Listen do
       doc: "Sanity project ID.",
       required: true
     ],
-    query_params: [
-      type: :keyword_list,
-      default: []
-    ],
-    variables: [
-      type: :map,
-      default: %{}
-    ],
     token: [
       type: :string,
       doc: "Sanity auth token."
     ]
   ]
 
+  @listen_opts_schema [
+                        query_params: [
+                          type: :keyword_list,
+                          default: []
+                        ],
+                        variables: [
+                          type: :map,
+                          default: %{}
+                        ]
+                      ] ++ @request_opts_schema
+
   @doc """
   Calls the [Sanity listen](https://www.sanity.io/docs/listening) API endpoint.
   """
   def listen(query, opts, acc, fun) do
-    opts = NimbleOptions.validate!(opts, @opts_schema)
+    opts = NimbleOptions.validate!(opts, @listen_opts_schema)
     query_params = Sanity.query_to_query_params(query, opts[:variables], opts[:query_params])
 
     url =
@@ -116,5 +119,20 @@ defmodule Sanity.Listen do
 
   defp process_event(%Event{} = event, %{acc: acc} = stream_acc, fun) do
     %{stream_acc | acc: fun.(event, acc)}
+  end
+
+  def listen_for_doc_changes(doc_id, opts, _fun) do
+    opts = NimbleOptions.validate!(opts, @request_opts_schema)
+    ids = [doc_id, "drafts.#{doc_id}"]
+
+    listen(
+      "_id in $ids",
+      Keyword.merge(opts, query_params: [include_result: true], variables: %{ids: ids}),
+      :fixme,
+      fn event, :fixme ->
+        dbg(event)
+        :fixme
+      end
+    )
   end
 end
