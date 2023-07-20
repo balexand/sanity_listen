@@ -1,9 +1,15 @@
 defmodule Sanity.Listen do
   @moduledoc """
-  Documentation for `Sanity.Listen`.
+  For listening to changes using the [Sanity CMS listening API
+  endpoint](https://www.sanity.io/docs/listening).
   """
 
   defmodule Event do
+    @moduledoc """
+    Sanity event. Contains `data`, `event`, and `id` fields. See [Sanity
+    docs](https://www.sanity.io/docs/listening) for a list of possible events.
+    """
+
     defstruct data: nil, event: nil, id: nil
   end
 
@@ -40,7 +46,12 @@ defmodule Sanity.Listen do
                       ] ++ @request_opts_schema
 
   @doc """
-  Calls the [Sanity listen](https://www.sanity.io/docs/listening) API endpoint.
+  Returns an endless `Stream` of `Sanity.Listen.Event` items.
+
+  This stream must be iterated upon in the same process that called this function. When this process
+  exits then the underlying HTTPS connection will be closed. The HTTPS connection will also be
+  closed if the stream is halted. For example, if `Enum.take/2` is called with the stream then the
+  HTTPS connection will be closed after the specified number of events have been received.
   """
   def listen!(query, opts) do
     opts = NimbleOptions.validate!(opts, @listen_opts_schema)
