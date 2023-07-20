@@ -122,15 +122,61 @@ defmodule Sanity.Listen do
     }
   end
 
-  def listen_for_doc_changes(doc_id, opts) do
+  def listen_for_doc_changes!(doc_id, opts) do
     opts = NimbleOptions.validate!(opts, @request_opts_schema)
-    ids = [doc_id, "drafts.#{doc_id}"]
+    draft_id = "drafts.#{doc_id}"
 
-    listen!(
-      "_id in $ids",
-      Keyword.merge(opts, query_params: [include_result: true], variables: %{ids: ids})
-    )
+    results =
+      Sanity.query("*[_id in $ids]", ids: [doc_id, draft_id])
+      |> Sanity.request!(opts)
+      |> Sanity.result!()
 
-    # FIXME
+    doc = Enum.find(results, &(&1["_id"] == doc_id))
+    draft = Enum.find(results, &(&1["_id"] == draft_id))
+
+    update_stream =
+      listen!(
+        "_id in $ids",
+        Keyword.merge(opts,
+          query_params: [include_result: true],
+          variables: %{ids: [doc_id, draft_id]}
+        )
+      )
+      |> Stream.transform(%{doc: doc, draft: draft}, fn
+        %Event{event: "welcome"}, acc ->
+          {[], acc}
+
+        %Event{event: "mutation", data: data}, acc ->
+          last = acc.draft || acc.doc
+
+          acc =
+            case data do
+              %{"documentId" => ^doc_id, "result" => %{"_id" => ^doc_id} = result} ->
+                # doc updated
+                %{acc | doc: result}
+
+              %{"documentId" => ^doc_id} = data when not is_map_key(data, "result") ->
+                # doc deleted
+                %{acc | doc: nil}
+
+              %{"documentId" => ^draft_id, "result" => %{"_id" => ^draft_id} = result} ->
+                # draft updated
+                %{acc | draft: result}
+
+              %{"documentId" => ^draft_id} = data when not is_map_key(data, "result") ->
+                # draft deleted
+                %{acc | draft: nil}
+
+              %{"documentId" => "_.listeners." <> _} ->
+                # ignore noise related to listener
+                acc
+            end
+
+          next = acc.draft || acc.doc
+
+          {if(next == last, do: [], else: [next]), acc}
+      end)
+
+    Stream.concat([draft || doc], update_stream)
   end
 end
