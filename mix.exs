@@ -22,8 +22,9 @@ defmodule Sanity.Listen.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:finch, "~> 0.16"},
+      {:castore, "~> 1.0"},
       {:jason, "~> 1.2"},
+      {:mint, "~> 1.0"},
       {:nimble_options, "~> 0.5 or ~> 1.0"},
       {:sanity, "~> 1.3"},
 

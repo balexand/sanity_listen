@@ -7,9 +7,7 @@ defmodule Sanity.Listen.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      {Finch, name: Sanity.Listen.Finch}
-    ]
+    children = []
 
     opts = [strategy: :one_for_one, name: Sanity.Listen.Supervisor]
     Supervisor.start_link(children, opts)
