@@ -1,13 +1,26 @@
 defmodule Sanity.Listen.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :sanity_listen,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.13",
+      description: "Listen for changes to Sanity CMS documents in realtime.",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: [
+        licenses: ["MIT"],
+        links: %{"GitHub" => "https://github.com/balexand/sanity_listen"}
+      ],
+      docs: [
+        extras: ["README.md"],
+        main: "readme",
+        source_ref: "v#{@version}",
+        source_url: "https://github.com/balexand/sanity_listen"
+      ]
     ]
   end
 
