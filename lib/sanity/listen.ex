@@ -5,9 +5,7 @@ defmodule Sanity.Listen do
 
   The streams returned by `listen!/2` and `listen_for_doc_changes!/2` must be iterated upon in the
   same process that called the function. When this process exits then the underlying HTTPS
-  connection will be closed. The HTTPS connection will also be closed if the stream is halted. For
-  example, if `Enum.take/2` is called with the stream then the HTTPS connection will be closed after
-  the specified number of events have been received.
+  connection will be closed. The HTTPS connection will also be closed if the stream is halted.
   """
 
   defmodule Event do
