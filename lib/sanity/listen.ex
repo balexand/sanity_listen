@@ -163,7 +163,7 @@ defmodule Sanity.Listen do
     draft_id = "drafts.#{id}"
 
     listen!(
-      "_id in $ids",
+      "*[_id in $ids]",
       Keyword.merge(doc_conn.opts,
         query_params: [include_result: true],
         variables: %{ids: [id, draft_id]}
@@ -193,10 +193,6 @@ defmodule Sanity.Listen do
             %{"documentId" => ^draft_id} = data when not is_map_key(data, "result") ->
               # draft deleted
               %{acc | draft: nil}
-
-            %{"documentId" => "_.listeners." <> _} ->
-              # ignore noise related to listener
-              acc
           end
 
         next = acc.draft || acc.doc
