@@ -38,7 +38,7 @@ defmodule Sanity.Listen.MixProject do
       {:jason, "~> 1.2"},
       {:mint, "~> 1.0"},
       {:nimble_options, "~> 0.5 or ~> 1.0"},
-      {:sanity, "~> 1.3"},
+      {:sanity, "~> 1.0 or ~> 2.0"},
 
       # dev/test
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
